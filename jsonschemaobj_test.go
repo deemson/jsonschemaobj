@@ -56,6 +56,22 @@ func TestBadJSON(t *testing.T) {
 	require.Nil(t, c)
 }
 
+func TestBadJSONPanic(t *testing.T) {
+	s := jsonschemaobj.ObjSchema{
+		"type": "object",
+		// Obviously non-JSON serializable object
+		"properties": make(chan int),
+	}
+	defer func() {
+		r := recover()
+		require.NotNil(t, r)
+		rErr, ok := r.(error)
+		require.True(t, ok)
+		require.Equal(t, "failed to marshal ObjSchema: json: unsupported type: chan int", rErr.Error())
+	}()
+	s.MustCompile()
+}
+
 func TestBadSchema(t *testing.T) {
 	s := jsonschemaobj.ObjSchema{
 		"type": "bad-type",
